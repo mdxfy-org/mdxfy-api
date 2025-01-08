@@ -15,7 +15,7 @@ class IndexController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'message' => 'Welcome to the mdxfy API',
+            'message' => "Welcome to MdxFy's API",
         ], 200);
     }
 
@@ -28,12 +28,17 @@ class IndexController extends Controller
     {
         $path = public_path('img/favicon.ico');
 
-        if (! file_exists($path)) {
+        if (!file_exists($path)) {
             abort(404, 'Favicon not found.');
         }
 
         return Response::file($path, [
             'Content-Type' => 'image/x-icon',
         ]);
+    }
+
+    public function mailTest()
+    {
+
     }
 }

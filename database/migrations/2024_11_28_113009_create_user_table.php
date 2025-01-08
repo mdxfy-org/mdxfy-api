@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration {
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -40,6 +40,32 @@ return new class() extends Migration {
             $table->string('code');
             $table->unsignedInteger('attempts')->default(0);
             $table->boolean('active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('hr.auth_email', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('hr.user')->onDelete('cascade');
+            $table->string('code');
+            $table->unsignedInteger('attempts')->default(0);
+            $table->boolean('active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('hr.timeout', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('hr.user')->onDelete('cascade');
+            $table->string('reason')->nullable();
+            $table->timestamp('timeout_start');
+            $table->timestamp('timeout_end')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('hr.banned', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('hr.user')->onDelete('cascade');
+            $table->string('reason')->nullable();
+            $table->timestamp('banned_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamps();
         });
 

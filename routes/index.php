@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::get('/', function () {
-    return response()->json(['message' => "Welcome to mdxfy's services"], 200);
+    return response()->json(['message' => "Welcome to MdxFy's services"], 200);
 });
 Route::get('/favicon.ico', function () {
     return response()->file(public_path('favicon.ico'));
