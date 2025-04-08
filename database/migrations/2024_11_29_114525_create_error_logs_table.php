@@ -5,11 +5,11 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration {
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('system.error_logs', function (Blueprint $table) {
-            $table->id();
+            $table->id()->primary();
             $table->text('json');
             $table->text('params');
             $table->timestamp('created_in')->default(DB::raw('CURRENT_TIMESTAMP'));

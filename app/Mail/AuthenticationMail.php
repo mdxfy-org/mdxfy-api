@@ -13,23 +13,22 @@ class AuthenticationMail extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public array $user)
-    {
-    }
+    public function __construct(public array $data) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bem-vindo(a) ao Hedy! Configure sua senha de acesso',
+            subject: 'Email de autenticação, por favor, confirme o acesso',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.welcome-new-employee',
+            view: 'emails.authentication',
             with: [
-                'user' => $this->user,
+                'user' => $this->data['user'],
+                'info' => $this->data['info'],
             ],
         );
     }

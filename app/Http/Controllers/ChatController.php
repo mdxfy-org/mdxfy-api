@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Message;
+use App\Models\Chat\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,8 +10,6 @@ class ChatController extends Controller
 {
     /**
      * Retrieve chat for the authenticated user.
-     *
-     * @return JsonResponse
      */
     public function getUserchat(): JsonResponse
     {

@@ -7,10 +7,8 @@ services:
             - "80:80"
             - "443:443"
         volumes:
-            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/api.conf
-            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/console.conf
-            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/socket.conf
-            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/storage.conf
+            - ../docker/config/nginx/conf.d/api.conf:/etc/nginx/conf.d/api.conf
+            - ../docker/config/nginx/conf.d/console.conf:/etc/nginx/conf.d/console.conf
         extra_hosts:
             - "host.docker.internal:host-gateway"
         networks:
@@ -18,69 +16,24 @@ services:
 
     mdxfy-php-fpm:
         container_name: mdxfy-php-fpm
-        build:
-            context: .
-            dockerfile: Dockerfile.dev
-        restart: always
-        working_dir: /var/www
-        ports:
-            - "9000:9000"
-        volumes:
-            - ./:/var/www
-            - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
-        depends_on:
-            - mdxfy-postgres
-            - mdxfy-nginx
-            - mdxfy-data-bucket
-        networks:
-            - mdxfy-network
+        extends:
+            file: ../docker-compose.yml
+            service: mdxfy-php-fpm
 
     mdxfy-postgres:
         container_name: mdxfy-postgres
-        image: postgres:15
-        restart: always
-        environment:
-            - POSTGRES_USER=${DB_USERNAME}
-            - POSTGRES_PASSWORD=${DB_PASSWORD}
-            - POSTGRES_DB=${DB_DATABASE}
-            - DB_HOST=${DB_HOST}
-            - DB_PORT=${DB_PORT}
-            - DB_SCHEMA=${DB_SCHEMA}
-        networks:
-            - mdxfy-network
-            - mapdata-network
-        volumes:
-            - ./docker/database/init-db.sh:/usr/local/bin/init-db.sh
-        entrypoint: >
-            sh -c "
-            /usr/local/bin/init-db.sh && tail -f /dev/null
-            "
+        extends:
+            file: ../docker-compose.yml
+            service: mdxfy-postgres
 
-    mdxfy-redis:
-        container_name: mdxfy-redis
-        image: redis:alpine
-        restart: always
-        ports:
-            - "6379:6379"
-        networks:
-            - mdxfy-network
-
-    mdxfy-data-bucket:
-        image: minio/minio:latest
-        container_name: mdxfy-data-bucket
-        ports:
-            - "9100:9100" # Porta de acesso ao bucket MinIO
-            - "9101:9101" # Porta de acesso ao painel MinIO
-        environment:
-            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
-            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
-        volumes:
-            - minio_data:/data
-        command: server /data --address "0.0.0.0:9100" --console-address "0.0.0.0:9101"
-        networks:
-            - mdxfy-network
+    mdxfy-minio:
+        container_name: mdxfy-minio
+        extends:
+            file: ../docker-compose.yml
+            service: mdxfy-minio
 
 volumes:
+    nginx-data:
     postgres_data:
     minio_data:
     cache:
@@ -89,3 +42,5 @@ volumes:
 networks:
     mdxfy-network:
         driver: bridge
+    mapdata-network:
+        external: true

@@ -4,25 +4,24 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class IndexController extends Controller
 {
     /**
      * Handle the API index request.
-     *
-     * @return JsonResponse
      */
     public function index(): JsonResponse
     {
         return response()->json([
-            'message' => "Welcome to MdxFy's API",
+            'message' => 'Welcome to the MDxFy API',
         ], 200);
     }
 
     /**
      * Serve the favicon.ico file.
      *
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return BinaryFileResponse
      */
     public function favicon()
     {
@@ -35,10 +34,5 @@ class IndexController extends Controller
         return Response::file($path, [
             'Content-Type' => 'image/x-icon',
         ]);
-    }
-
-    public function mailTest()
-    {
-
     }
 }

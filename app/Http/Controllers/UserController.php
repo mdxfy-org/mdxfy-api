@@ -2,398 +2,195 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuthCode;
-use App\Models\FilesImage;
-use App\Models\Session;
-use App\Models\User;
-use App\Services\SmsSender;
-use Carbon\Carbon;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use App\Factories\ResponseFactory;
+use App\Http\Requests\User\UserStoreRequest;
+use App\Http\Requests\User\UserUpdateRequest;
+use App\Models\Error;
+use App\Models\Hr\AuthCode;
+use App\Models\Hr\User;
+use App\Services\AuthService;
+use App\Services\PictureService;
+use App\Services\UserQueryService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    public function list(Request $request)
-    {
-        return response()->json(['message' => 'not_implemented'], 501);
+    protected $userService;
+
+    protected $authService;
+
+    protected $userQueryService;
+
+    protected $pictureService;
+
+    public function __construct(
+        UserService $userService,
+        AuthService $authService,
+        UserQueryService $userQueryService,
+        PictureService $pictureService
+    ) {
+        $this->userService = $userService;
+        $this->authService = $authService;
+        $this->userQueryService = $userQueryService;
+        $this->pictureService = $pictureService;
     }
 
-    public function get(Request $request)
+    public function index(Request $request)
     {
         $query = $request->only(['id', 'telephone', 'name']);
-        $userQuery = User::query();
-
-        if (! empty($query['id'])) {
-            $userQuery->where('id', $query['id']);
-        } elseif (! empty($query['telephone'])) {
-            $userQuery->where('number', $query['telephone']);
-        } elseif (! empty($query['name'])) {
-            $userQuery->where('name', 'like', '%'.$query['name'].'%');
-        }
-
-        $user = $userQuery->first();
+        $user = $this->userQueryService->getUser($query);
 
         if ($user) {
-            return response()->json(['data' => $user], 200);
+            return ResponseFactory::success('user_found', $user);
         }
 
-        return response()->json(['message' => 'user_not_found'], 404);
+        return ResponseFactory::error('user_not_found', null, null, 404);
     }
 
-    public function create(Request $request)
+    public function store(UserStoreRequest $request)
     {
-        $params = User::prepareInsert($request->all());
-        $validated = User::validateInsert(User::prepareInsert($params));
+        $data = $request->validated();
+        $result = $this->userService->createUser($data, $request);
 
-        if (! empty($validated)) {
-            return response()->json(['message' => 'error_creating_user', 'fields' => $validated], 400);
+        if ($result instanceof Error) {
+            return ResponseFactory::create($result);
         }
 
-        $existingUser = User::where('number', $params['number'])->first();
+        return ResponseFactory::success('user_created_successfully', $result, 201);
+    }
 
-        if ($existingUser) {
-            return response()->json([
-                'message' => 'user_already_exists',
-                'fields' => [
-                    'number' => 'user_already_exists',
-                ],
-            ], 400);
+    public function update(UserUpdateRequest $request)
+    {
+        $data = $request->only(['name', 'email']);
+        $user = User::auth();
+
+        if (!$user) {
+            return ResponseFactory::error('user_not_found', null, null, 404);
         }
 
-        $user = User::create($params);
+        $user->update($data);
 
-        $authCode = AuthCode::createCode($user->id);
-        $data = [
-            'user_id' => $user->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'auth_code_id' => $authCode->id,
-            'last_activity' => Carbon::now()->timestamp,
-        ];
-
-        $session = Session::create($data);
-
-        $jwt = JWT::encode(
-            [
-                'iss' => env('APP_URL'),
-                'sub' => $user->id,
-                'sid' => $session->id,
-                'aud' => 'mdxfy-app-services',
-                'iat' => now()->timestamp,
-                'jti' => uniqid(),
-            ],
-            env('APP_KEY'),
-            'HS256'
-        );
-
-        $response = [
-            'message' => 'user_created_successfully',
+        return ResponseFactory::success('user_updated', [
             'user' => [
                 'id' => $user->id,
+                'uuid' => $user->uuid,
                 'name' => $user->name,
                 'surname' => $user->surname,
+                'email' => $user->email,
                 'number' => $user->number,
+                'profile_picture' => $user->profile_picture,
             ],
-            'token' => $jwt,
-        ];
-
-        return response()->json($response, 201);
+        ]);
     }
 
     public function login(Request $request)
     {
-        $params = $request->only(['number', 'password']);
-        if (! isset($params['number']) || ! isset($params['password'])) {
-            return response()->json(['message' => 'invalid_login_credentials'], 400);
+        $credentials = $request->only(['email', 'password', 'remember']);
+
+        $result = $this->authService->login($credentials, $request);
+
+        if ($result instanceof Error) {
+            return ResponseFactory::create($result);
         }
 
-        $params = User::prepareInsert($request->all());
-        $user = User::where('number', $params['number'])->first();
+        return ResponseFactory::success('login_authentication_code_sent', $result);
+    }
 
-        if (! $user) {
-            return response()->json([
-                'message' => 'user_not_found',
-                'fields' => [
-                    'number' => 'user_not_found',
-                ],
-            ], 404);
-        }
-
-        if (! Hash::check($params['password'], $user->password)) {
-            return response()->json(['message' => 'wrong_password'], 401);
-        }
-
-        $authCode = AuthCode::createCode($user->id);
-        // TODO: session is not creating correctly, it is returning the first created
-        $session = Session::create([
-            'user_id' => $user->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'auth_code_id' => $authCode->id,
-            'last_activity' => Carbon::now()->timestamp,
-        ]);
-
-        $jwt = JWT::encode(
-            [
-                'iss' => env('APP_URL'),
-                'sub' => $user->id,
-                'sid' => $session->id,
-                'aud' => 'mdxfy-app-services',
-                'iat' => now()->timestamp,
-                'jti' => uniqid(),
-            ],
-            env('APP_KEY'),
-            'HS256'
-        );
-
-        $response = [
-            'message' => 'login_successful_authentication_code_sent',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'number' => $user->number,
-                'surname' => $user->surname,
-                'email' => $user->email,
-                'profile_picture' => $user->profile_picture,
-            ],
-            'token' => $jwt,
-        ];
-
-        return response()->json($response, 200);
+    public function resendCode()
+    {
+        // $result = $this->authService->resendCode();
+        return ResponseFactory::error('not_implemented', null, null, 501);
     }
 
     public function authenticate(Request $request)
     {
-        $user = Auth::user();
+        $result = $this->authService->authenticate($request);
 
-        if (! $user) {
-            return response()->json(['message' => 'user_not_authenticated'], 401);
+        if ($result instanceof Error) {
+            return ResponseFactory::create($result);
         }
 
-        $token = $request->bearerToken();
-        $decoded = JWT::decode($token, new Key(env('APP_KEY'), 'HS256'));
+        return ResponseFactory::success('user_authenticated_successfully', $result);
+    }
 
-        $session = Session::where('id', $decoded->sid)->first();
+    public function authenticationMethods()
+    {
+        $user = User::auth();
+        $methods = [];
 
-        $authCode = AuthCode::where('id', $session['auth_code_id'])->first();
-
-        if (! $authCode) {
-            return response()->json([
-                'message' => 'invalid_authentication_code',
-                'fields' => [
-                    'code' => 'invalid_authentication_code',
-                ],
-            ], 400);
+        if ($user->number_verified === true) {
+            $methods[] = 'sms';
         }
 
-        if ($authCode->code !== $request->only('code')) {
-            if ($authCode->attempts + 1 >= 3) {
-                $authCode->update(['active' => false]);
-
-                return response()->json([
-                    'message' => 'authentication_code_attempts_exceeded',
-                    'fields' => [
-                        'code' => 'authentication_code_attempts_exceeded',
-                    ],
-                ], 401);
-            }
-            $authCode->update(['attempts' => $authCode->attempts + 1]);
-
-            return response()->json([
-                'message' => 'invalid_authentication_code',
-                'fields' => [
-                    'code' => 'invalid_authentication_code',
-                ],
-            ], 400);
+        if ($user->email_verified === true) {
+            $methods[] = 'email';
         }
 
-        $authCode->update(['active' => false]);
+        return ResponseFactory::success('available_authentication_methods', ['methods' => $methods]);
+    }
 
-        $updateUser = new User();
-        $updateUser->update(['number_authenticated' => true]);
+    public function self()
+    {
+        $user = User::auth();
 
-        $jwt = JWT::encode(
-            [
-                'iss' => env('APP_URL'),
-                'sub' => $user->id,
-                'sid' => $session->id,
-                'aud' => 'mdxfy-app-services',
-                'iat' => now()->timestamp,
-                'jti' => uniqid(),
-            ],
-            env('APP_KEY'),
-            'HS256'
-        );
+        if (!$user) {
+            return ResponseFactory::error('user_not_authenticated', null, null, 401);
+        }
 
-        $response = [
-            'message' => 'user_authenticated_successfully',
+        $session = User::session();
+
+        return ResponseFactory::success('user_found', [
             'user' => [
                 'id' => $user->id,
+                'uuid' => $user->uuid,
                 'name' => $user->name,
-                'number' => $user->number,
                 'surname' => $user->surname,
                 'email' => $user->email,
+                'number' => $user->number,
                 'profile_picture' => $user->profile_picture,
             ],
-            'token' => $jwt,
-        ];
-
-        return response()->json($response, 200);
+            'authenticated' => $session->authenticated,
+        ]);
     }
 
-    public function resendCode(Request $request)
+    public function info($uuid)
     {
-        $user = Auth::user();
+        $user = $this->userQueryService->getInfo($uuid);
 
-        if (! $user) {
-            return response()->json(['message' => 'user_not_found'], 404);
+        if (!$user) {
+            return ResponseFactory::error('user_not_found', null, null, 404);
         }
 
-        $token = $request->bearerToken();
-        $decoded = JWT::decode($token, new Key(env('APP_KEY'), 'HS256'));
-
-        $session = Session::where('id', $decoded->sid);
-
-        $recentCode = AuthCode::where('user_id', $user->id)
-            ->where('session_id', $session->id)
-            ->where('active', true)
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if ($recentCode) {
-            SmsSender::send($user->number, "Seu código de autenticação para o mdxfy é: {$recentCode->code}");
-
-            return response()->json(['message' => 'authentication_code_resent'], 200);
-        }
-
-        try {
-            AuthCode::createCode($user->id);
-
-            return response()->json(['message' => 'authentication_code_resent'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'failed_to_resend_code', 'error' => $e->getMessage()], 500);
-        }
+        return ResponseFactory::success('user_found', $user);
     }
 
-    public function self(Request $request)
+    public function picture($userUuid, $pictureUuid = null)
     {
-        $user = Auth::user();
+        $result = $this->pictureService->getPicture($userUuid, $pictureUuid);
 
-        if (! $user) {
-            return response()->json(['message' => 'user_not_authenticated'], 401);
+        if ($result instanceof Error) {
+            return ResponseFactory::create($result);
         }
 
-        $response = [
-            'message' => 'user_found',
-        ];
-
-        $token = $request->bearerToken();
-        if ($token) {
-            $decoded = JWT::decode($token, new Key(env('APP_KEY'), 'HS256'));
-            $response['user'] = $user;
-            if (! isset($decoded->sid)) {
-                $response['user'] = [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'number' => $user->number,
-                    'surname' => $user->surname,
-                    'email' => $user->email,
-                    'profile_picture' => $user->profile_picture,
-                ];
-            }
-        }
-
-        return response()->json($response, 200);
-    }
-
-    public function info($id)
-    {
-        $user = User::find($id, ['id', 'name', 'number', 'profile_picture']);
-
-        if (! $user) {
-            return response()->json(['message' => 'user_not_found'], 404);
-        }
-
-        return response()->json(['data' => $user], 200);
-    }
-
-    public function picture($userId, $pictureUuid = null)
-    {
-        $files = Storage::files("uploads/pictures/{$userId}");
-        if (empty($files)) {
-            return response()->json(['message' => 'no_images_found'], 404);
-        }
-
-        if ($pictureUuid) {
-            $file = Storage::get("uploads/pictures/{$userId}/{$pictureUuid}");
-            $type = Storage::mimeType("uploads/pictures/{$userId}/{$pictureUuid}");
-
-            return response($file, 200)->header('Content-Type', $type);
-        }
-
-        $lastFile = end($files);
-        $file = Storage::get($lastFile);
-        $type = Storage::mimeType($lastFile);
-
-        return response($file, 200)->header('Content-Type', $type);
+        return response($result->data['file'], 200)->header('Content-Type', $result->data['mime']);
     }
 
     public function postPicture(Request $request)
     {
-        $user = Auth::user();
+        $user = User::auth();
 
-        if (! $user) {
-            return response()->json(['message' => 'user_not_authenticated'], 401);
+        if (!$user) {
+            return ResponseFactory::error('user_not_authenticated', null, null, 401);
         }
 
-        $validated = $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        $result = $this->pictureService->uploadPicture($request, $user);
 
-        $file = $validated['image'];
-
-        $fileName = Str::uuid().'.'.$file->getClientOriginalExtension();
-
-        $path = $file->storeAs(
-            "uploads/pictures/{$user->id}",
-            $fileName,
-            env('FILESYSTEM_DISK', 's3')
-        );
-
-        if (! $path) {
-            return response()->json(['message' => 'failed_to_upload_image'], 500);
+        if ($result instanceof Error) {
+            return ResponseFactory::error('error_uploading_image', null, $result);
         }
 
-        $fileRecord = FilesImage::create([
-            'id' => Str::uuid(),
-            'name' => $file->getClientOriginalName(),
-            'path' => $path,
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'uploaded_by' => $user->id,
-        ]);
-
-        $appUrl = env('APP_URL');
-        $user = new User();
-        $user->update([
-            'profile_picture' => "{$appUrl}uploads/pictures/{$path}",
-        ], ['id' => $user->id]);
-
-        if (! $fileRecord) {
-            Storage::disk(env('FILESYSTEM_DISK', 's3'))->delete($path);
-
-            return response()->json(['message' => 'failed_to_save_image_record'], 500);
-        }
-
-        return response()->json([
-            'message' => 'image_uploaded_successfully',
-            'file' => $fileRecord,
-        ], 201);
+        return ResponseFactory::success('image_uploaded_successfully', $result, 201);
     }
 
     public function exists(Request $request)
@@ -402,12 +199,17 @@ class UserController extends Controller
             'number' => 'required|string|max:255',
         ]);
 
-        $user = User::where('number', $validated['number'])->first();
+        $user = $this->userQueryService->exists($validated['number']);
 
-        if (! $user) {
-            return response()->json(['message' => 'user_not_found'], 404);
+        if (!$user) {
+            return ResponseFactory::error('user_not_found', null, null, 404);
         }
 
-        return response()->json(['message' => 'user_found', 'data' => $user], 200);
+        return ResponseFactory::success('user_found', $user);
+    }
+
+    public function codeLength()
+    {
+        return ResponseFactory::success('code_length', ['length' => AuthCode::LENGTH]);
     }
 }

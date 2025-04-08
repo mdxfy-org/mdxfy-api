@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return response()->json([
-        'message' => 'mdxfy data bucket',
+        'message' => 'MDxFy data bucket',
     ], 200);
 });
 

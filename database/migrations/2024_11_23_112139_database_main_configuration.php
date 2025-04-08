@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class() extends Migration {
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,6 +13,7 @@ return new class() extends Migration {
 
         DB::statement('CREATE SCHEMA IF NOT EXISTS hr');
         DB::statement('CREATE SCHEMA IF NOT EXISTS chat');
+        DB::statement('CREATE SCHEMA IF NOT EXISTS transport');
         DB::statement('CREATE SCHEMA IF NOT EXISTS system');
         DB::statement('CREATE SCHEMA IF NOT EXISTS integration');
         DB::statement('CREATE SCHEMA IF NOT EXISTS file');
@@ -25,5 +26,13 @@ return new class() extends Migration {
     public function down(): void
     {
         DB::statement("SET TIME ZONE 'UTC'");
+
+        DB::statement('DROP SCHEMA IF EXISTS hr CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS chat CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS transport CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS system CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS integration CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS file CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS framework CASCADE');
     }
 };

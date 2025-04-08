@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendMail;
+use App\Jobs\SendSms;
+use App\Mail\FirstLoginMail;
+use App\Models\Tracker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class DebugController extends Controller
 {
@@ -12,13 +17,14 @@ class DebugController extends Controller
     {
         return response()->json([
             'message' => ['ping' => 'pong'],
-            'data'    => ['request' => $GLOBALS],
             'request' => [
+                'ip' => Tracker::ip(),
                 'request_method' => $request->method(),
-                'params'         => $request->route()->parameters(),
-                'body'           => $request->all(),
-                'query'          => $request->query(),
+                'params' => $request->route()->parameters(),
+                'body' => $request->all(),
+                'query' => $request->query(),
             ],
+            'data' => ['request' => $GLOBALS],
             'raw_data' => $request->getContent(),
         ]);
     }
@@ -28,7 +34,7 @@ class DebugController extends Controller
         return response()->json([
             'request' => [
                 'params' => $request->route()->parameters(),
-                'query'  => $request->query(),
+                'query' => $request->query(),
             ],
         ]);
     }
@@ -46,9 +52,8 @@ class DebugController extends Controller
     {
         return response()->json([
             'message' => 'This functionality will not return values.',
-            'data'    => [
+            'data' => [
                 'requested_var' => $variable,
-
             ],
         ]);
     }
@@ -95,6 +100,35 @@ class DebugController extends Controller
         }
 
         return response()->json(['data' => null]);
+    }
+
+    public function sendEmail()
+    {
+        $mailable = new FirstLoginMail(['user' => ['name' => 'Murilo'], 'info' => ['code' => '123456', 'expires' => now()->addMinutes(10)]]);
+        $mail = Mail::to('murilo7456@gmail.com')->send($mailable);
+
+        return response()->json(['message' => 'Email sent', 'mail_info' => $mail->getDebug()]);
+    }
+
+    public function sendSms()
+    {
+        // $job = SendSms::dispatch('+5564996020731', 'Seu código de autenticação para o mdxfy é: Apenas um teste');
+
+        // return response()->json(['message' => 'Email job created', 'job_info' => $job->getJob()]);
+    }
+
+    public function sendEmailJob()
+    {
+        $job = SendMail::dispatch('murilo7456@gmail.com', FirstLoginMail::class, ['user' => ['name' => 'Murilo'], 'info' => ['code' => '123456', 'expires' => now()->addMinutes(10)]]);
+
+        return response()->json(['message' => 'Email job created', 'job_info' => $job->getJob()]);
+    }
+
+    public function sendSmsJob()
+    {
+        $job = SendSms::dispatch('+5564996020731', 'Seu código de autenticação para o mdxfy é: Apenas um teste');
+
+        return response()->json(['message' => 'Email job created', 'job_info' => $job->getJob()]);
     }
 
     private function readDirectory($directory)
