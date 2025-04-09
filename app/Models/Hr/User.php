@@ -18,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
  * @property int         $id
  * @property int         $uuid
  * @property string      $name
- * @property string      $surname
+ * @property string      $username
  * @property string      $number
  * @property string      $email
  * @property string      $password
@@ -29,6 +29,7 @@ use Illuminate\Notifications\Notifiable;
  * @property null|Carbon $email_verified_at
  * @property bool        $active
  * @property null|string $profile_picture
+ * @property null|string $profile_banner
  * @property null|string $remember_token
  * @property Carbon      $created_at
  * @property Carbon      $updated_at
@@ -51,7 +52,7 @@ class User extends DynamicQuery
     protected $fillable = [
         'uuid',
         'name',
-        'surname',
+        'username',
         'number',
         'email',
         'password',
@@ -62,6 +63,7 @@ class User extends DynamicQuery
         'email_verified_at',
         'active',
         'profile_picture',
+        'profile_banner',
         'remember_token',
     ];
 

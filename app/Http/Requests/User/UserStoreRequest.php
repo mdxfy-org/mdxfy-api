@@ -15,7 +15,13 @@ class UserStoreRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'surname' => 'required|string|max:255',
+            'username' => [
+                'required',
+                'string',
+                'unique:pgsql.hr.user',
+                'max:255',
+                'regex:/^[a-zA-Z0-9_]+$/',
+            ],
             'number' => 'regex:/^\d{13}$/',
             'email' => 'required|email|unique:pgsql.hr.user|max:255',
             'password' => [
@@ -34,11 +40,13 @@ class UserStoreRequest extends FormRequest
     {
         return [
             'name.required' => 'name_required',
-            'surname.required' => 'surname_required',
+            'username.required' => 'username_required',
+            'username.unique' => 'username_already_exists',
+            'username.regex' => 'invalid_username',
             'number.required' => 'number_required',
             'number.regex' => 'invalid_number',
             'email.email' => 'invalid_email',
-            'email.unique' => 'user_already_exists',
+            'email.unique' => 'email_already_exists',
             'password.required' => 'password_required',
             'password.min' => 'password_length',
             'password.regex' => 'password_character',

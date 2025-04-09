@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Factories\ResponseFactory;
 use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Requests\User\UserUpdateRequest;
+use App\Http\Responses\User\UserDataResponse;
 use App\Models\Error;
 use App\Models\Hr\AuthCode;
 use App\Models\Hr\User;
@@ -72,15 +73,7 @@ class UserController extends Controller
         $user->update($data);
 
         return ResponseFactory::success('user_updated', [
-            'user' => [
-                'id' => $user->id,
-                'uuid' => $user->uuid,
-                'name' => $user->name,
-                'surname' => $user->surname,
-                'email' => $user->email,
-                'number' => $user->number,
-                'profile_picture' => $user->profile_picture,
-            ],
+            'user' => UserDataResponse::format($user),
         ]);
     }
 
@@ -141,15 +134,7 @@ class UserController extends Controller
         $session = User::session();
 
         return ResponseFactory::success('user_found', [
-            'user' => [
-                'id' => $user->id,
-                'uuid' => $user->uuid,
-                'name' => $user->name,
-                'surname' => $user->surname,
-                'email' => $user->email,
-                'number' => $user->number,
-                'profile_picture' => $user->profile_picture,
-            ],
+            'user' => UserDataResponse::format($user),
             'authenticated' => $session->authenticated,
         ]);
     }
@@ -185,6 +170,23 @@ class UserController extends Controller
         }
 
         $result = $this->pictureService->uploadPicture($request, $user);
+
+        if ($result instanceof Error) {
+            return ResponseFactory::error('error_uploading_image', null, $result);
+        }
+
+        return ResponseFactory::success('image_uploaded_successfully', $result, 201);
+    }
+
+    public function postBanner(Request $request)
+    {
+        $user = User::auth();
+
+        if (!$user) {
+            return ResponseFactory::error('user_not_authenticated', null, null, 401);
+        }
+
+        $result = $this->pictureService->uploadBanner($request, $user);
 
         if ($result instanceof Error) {
             return ResponseFactory::error('error_uploading_image', null, $result);

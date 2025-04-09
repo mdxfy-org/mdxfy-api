@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->id()->unique()->primary();
             $table->uuid()->unique();
             $table->string('name');
-            $table->string('surname');
+            $table->string('username')->unique();
             $table->string('number')->unique()->nullable();
             $table->string('email')->unique();
             $table->string('password');
@@ -25,6 +25,7 @@ return new class extends Migration {
             $table->boolean('email_verified')->default(false);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('profile_picture')->nullable();
+            $table->string('profile_banner')->nullable();
             $table->rememberToken();
             $table->boolean('active')->default(true);
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
