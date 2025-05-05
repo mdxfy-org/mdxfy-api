@@ -16,7 +16,7 @@ class UserDataResponse
             'id' => $user->id,
             'uuid' => $user->uuid,
             'name' => $user->name,
-            'surname' => $user->surname,
+            'username' => $user->username,
             'email' => $user->email,
             'number' => $user->number,
             'profile_picture' => $user->profile_picture,

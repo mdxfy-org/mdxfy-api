@@ -68,7 +68,7 @@ class AuthService
         $jwt = TokenFactory::create($user, $session);
 
         return new Success('login_success', [
-            'user' => UserDataResponse::withDocument($user),
+            'user' => UserDataResponse::format($user),
             'token' => $jwt,
             'auth' => ($user->email_verified && $remember) ? UserAction::AUTHENTICATED->value : UserAction::AUTHENTICATE->value,
         ]);
@@ -114,7 +114,7 @@ class AuthService
         $session->update(['auth_code_id' => $newAuthCode->id]);
 
         return new Success('code_resent', [
-            'user' => UserDataResponse::withDocument($user),
+            'user' => UserDataResponse::format($user),
         ]);
     }
 
@@ -176,7 +176,7 @@ class AuthService
         $jwt = TokenFactory::create($user, $session);
 
         return new Success('authentication_success', [
-            'user' => UserDataResponse::withDocument($user),
+            'user' => UserDataResponse::format($user),
             'token' => $jwt,
         ]);
     }

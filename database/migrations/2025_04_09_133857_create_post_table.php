@@ -11,10 +11,11 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('post.post', function (Blueprint $table) {
-            $table->id()->unique()->primary();
+            $table->id();
             $table->uuid()->unique();
             $table->text('content');
             $table->enum('visibility', ['public', 'private', 'friends'])->default('public');
+            $table->foreignId('answer_to')->nullable()->constrained('chat.message')->onDelete('cascade');
             $table->enum('status', ['published', 'draft'])->default('draft');
             $table->string('user_id');
         });
