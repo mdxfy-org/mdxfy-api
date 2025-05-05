@@ -53,6 +53,9 @@ Route::middleware(['db.safe', 'fingerprint'])->group(function () {
         Route::prefix('/picture')->middleware(['auth'])->group(function () {
             Route::post('/upload', [UserController::class, 'postPicture']);
         });
+        Route::prefix('/picture')->middleware(['auth'])->group(function () {
+            Route::post('/upload', [UserController::class, 'postBanner']);
+        });
         Route::get('/exists', [UserController::class, 'exists']);
         Route::middleware(['auth.basic'])->prefix('/auth')->group(function () {
             Route::get('/', [UserController::class, 'authenticate']);
@@ -69,38 +72,6 @@ Route::middleware(['db.safe', 'fingerprint'])->group(function () {
             Route::get('/{chatUuid}', [MessageController::class, 'getMessage']); // Get message in a chat
             Route::post('/', [MessageController::class, 'sendMessage']); // Send a message
             Route::delete('/{id}', [MessageController::class, 'deleteMessage']); // Delete a message
-        });
-
-        // Machinery routes
-        Route::prefix('/machinery')->group(function () {
-            Route::get('/', [MachineryController::class, 'listMachinery']);
-            Route::post('/create', [MachineryController::class, 'createMachine']);
-            Route::put('/update', [MachineryController::class, 'updateMachine']);
-            Route::delete('/disable', [MachineryController::class, 'disableMachine']);
-        });
-
-        // Transport vehicle routes
-        Route::prefix('/transport')->group(function () {
-            Route::get('/', [CarrierController::class, 'listTransports']);
-            Route::post('/create', [CarrierController::class, 'createTransport']);
-            Route::put('/update', [CarrierController::class, 'updateTransport']);
-            Route::delete('/disable', [CarrierController::class, 'disableTransport']);
-        });
-
-        // Request routes
-        Route::prefix('/request')->group(function () {
-            Route::get('/', [RequestController::class, 'listRequests']);
-            Route::post('/create', [RequestController::class, 'makeRequest']);
-            Route::put('/update', [RequestController::class, 'updateRequest']);
-            Route::delete('/cancel', [RequestController::class, 'cancelRequest']);
-        });
-
-        // Offer routes
-        Route::prefix('/offer')->group(function () {
-            Route::get('/', [OfferController::class, 'listOffers']);
-            Route::post('/create', [OfferController::class, 'makeOffer']);
-            Route::put('/update', [OfferController::class, 'updateOffer']);
-            Route::delete('/cancel', [OfferController::class, 'cancelOffer']);
         });
     });
 });
