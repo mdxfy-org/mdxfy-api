@@ -14,7 +14,7 @@ class IndexController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'message' => 'Welcome to the MDxFy API',
+            'message' => 'Welcome to the Mdxfy API',
         ], 200);
     }
 

@@ -17,7 +17,7 @@ class SmsService
     {
         $key = config('services.vonage.key');
         $secret = config('services.vonage.secret');
-        $this->from = config('services.vonage.from', 'MDxFy');
+        $this->from = config('services.vonage.from', 'Mdxfy');
 
         $credentials = new VonageCredentials($key, $secret);
         $this->client = new VonageClient($credentials);

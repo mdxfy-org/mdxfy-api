@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
 /**
@@ -16,23 +17,24 @@ use Illuminate\Notifications\Notifiable;
  * Represents a system user with associated attributes and logic.
  *
  * @property int         $id
- * @property int         $uuid
+ * @property string      $uuid
  * @property string      $name
- * @property string      $username
- * @property string      $number
+ * @property string      $surname
  * @property string      $email
+ * @property string      $number
  * @property string      $password
  * @property string      $language
- * @property bool        $number_verified
- * @property null|Carbon $number_verified_at
+ * @property null|string $profile_type
  * @property bool        $email_verified
  * @property null|Carbon $email_verified_at
+ * @property bool        $number_verified
+ * @property null|Carbon $number_verified_at
  * @property bool        $active
  * @property null|string $profile_picture
- * @property null|string $profile_banner
  * @property null|string $remember_token
  * @property Carbon      $created_at
  * @property Carbon      $updated_at
+ * @property null|Carbon $inactivated_at
  */
 class User extends DynamicQuery
 {
@@ -52,18 +54,20 @@ class User extends DynamicQuery
     protected $fillable = [
         'uuid',
         'name',
-        'username',
+        'surname',
         'number',
         'email',
         'password',
+        'profile_type',
         'language',
-        'number_verified',
-        'number_verified_at',
         'email_verified',
         'email_verified_at',
+        'number_verified',
+        'number_verified_at',
+        'updated_at',
+        'inactivated_at',
         'active',
         'profile_picture',
-        'profile_banner',
         'remember_token',
     ];
 
@@ -76,6 +80,9 @@ class User extends DynamicQuery
     protected $dates = [
         'created_at',
         'updated_at',
+        'inactivated_at',
+        'email_verified_at',
+        'number_verified_at',
     ];
 
     protected $hidden = [
@@ -143,30 +150,21 @@ class User extends DynamicQuery
         }
 
         $session = Session::where('id', $decoded->sid)->first();
-        self::$session = $session;
         if (!$session) {
             return UserError::SESSION_NOT_FOUND;
         }
+        self::$session = $session;
 
         return $session;
     }
 
-    /**
-     * Prepares data for insertion by normalizing and sanitizing inputs.
-     *
-     * @param array $params data received from the request
-     *
-     * @return array prepared data for insertion
-     */
-    public static function prepareInsert(array $params): array
+    public function documents(): HasMany
     {
-        if (isset($params['email'])) {
-            $params['email'] = strtolower($params['email']);
-        }
-        if (isset($params['number'])) {
-            $params['number'] = preg_replace('/\D/', '', $params['number']);
-        }
+        return $this->hasMany(Document::class, 'user_id', 'id');
+    }
 
-        return $params;
+    public function payment_methods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class, 'user_id', 'id');
     }
 }

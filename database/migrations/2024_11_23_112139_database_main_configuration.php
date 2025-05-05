@@ -18,7 +18,6 @@ return new class extends Migration {
         DB::statement('CREATE SCHEMA IF NOT EXISTS integration');
         DB::statement('CREATE SCHEMA IF NOT EXISTS file');
         DB::statement('CREATE SCHEMA IF NOT EXISTS framework');
-        DB::statement('CREATE SCHEMA IF NOT EXISTS post');
     }
 
     /**
@@ -35,6 +34,5 @@ return new class extends Migration {
         DB::statement('DROP SCHEMA IF EXISTS integration CASCADE');
         DB::statement('DROP SCHEMA IF EXISTS file CASCADE');
         DB::statement('DROP SCHEMA IF EXISTS framework CASCADE');
-        DB::statement('DROP SCHEMA IF EXISTS post CASCADE');
     }
 };

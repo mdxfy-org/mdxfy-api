@@ -34,7 +34,7 @@ class AuthService
         }
 
         if (!Hash::check($credentials['password'], $user->password)) {
-            return new Error('wrong_password', ['password' => 'wrong_password']);
+            return new Error('current_password', ['password' => 'current_password']);
         }
 
         $browserFingerprint = $request->header('Browser-Agent');
@@ -68,7 +68,7 @@ class AuthService
         $jwt = TokenFactory::create($user, $session);
 
         return new Success('login_success', [
-            'user' => UserDataResponse::format($user),
+            'user' => UserDataResponse::withDocument($user),
             'token' => $jwt,
             'auth' => ($user->email_verified && $remember) ? UserAction::AUTHENTICATED->value : UserAction::AUTHENTICATE->value,
         ]);
@@ -79,8 +79,43 @@ class AuthService
      */
     public function resendCode(): Error|Success
     {
-        // TODO: Implement resendCode() method.
-        return new Error('not_implemented');
+        $user = User::auth();
+        if (!$user) {
+            return new Error('user_not_authenticated');
+        }
+
+        $session = User::session();
+        if (!$session) {
+            return new Error('session_not_found');
+        }
+
+        $authCode = AuthCode::where('id', $session->auth_code_id)
+            ->where('auth_type', AuthCode::EMAIL)
+            ->first()
+        ;
+        if (!$authCode) {
+            return new Error('invalid_authentication_code');
+        }
+
+        $timeoutSeconds = 60;
+        if (Carbon::now()->diffInSeconds($authCode->created_at) < $timeoutSeconds) {
+            return new Error('resend_timeout', [
+                'message' => "Please wait {$timeoutSeconds} seconds before resending the code.",
+            ]);
+        }
+
+        $attempts = $authCode->attempts;
+
+        $authCode->update(['active' => false]);
+
+        $newAuthCode = AuthCode::createCode($user->id, AuthCode::EMAIL);
+        $newAuthCode->update(['attempts' => $attempts]);
+
+        $session->update(['auth_code_id' => $newAuthCode->id]);
+
+        return new Success('code_resent', [
+            'user' => UserDataResponse::withDocument($user),
+        ]);
     }
 
     /**
@@ -141,7 +176,7 @@ class AuthService
         $jwt = TokenFactory::create($user, $session);
 
         return new Success('authentication_success', [
-            'user' => UserDataResponse::format($user),
+            'user' => UserDataResponse::withDocument($user),
             'token' => $jwt,
         ]);
     }
