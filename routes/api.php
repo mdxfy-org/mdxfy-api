@@ -53,7 +53,7 @@ Route::middleware(['db.safe', 'fingerprint'])->group(function () {
         Route::prefix('/picture')->middleware(['auth'])->group(function () {
             Route::post('/upload', [UserController::class, 'postPicture']);
         });
-        Route::prefix('/picture')->middleware(['auth'])->group(function () {
+        Route::prefix('/banner')->middleware(['auth'])->group(function () {
             Route::post('/upload', [UserController::class, 'postBanner']);
         });
         Route::get('/exists', [UserController::class, 'exists']);
