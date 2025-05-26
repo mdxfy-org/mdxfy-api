@@ -25,8 +25,10 @@ use Illuminate\Notifications\Notifiable;
  * @property string      $password
  * @property string      $language
  * @property null|string $profile_type
+ * @property bool        $email_two_factor_auth
  * @property bool        $email_verified
  * @property null|Carbon $email_verified_at
+ * @property bool        $number_two_factor_auth
  * @property bool        $number_verified
  * @property null|Carbon $number_verified_at
  * @property bool        $active
@@ -61,8 +63,10 @@ class User extends DynamicQuery
         'password',
         'profile_type',
         'language',
+        'email_two_factor_auth',
         'email_verified',
         'email_verified_at',
+        'number_two_factor_auth',
         'number_verified',
         'number_verified_at',
         'updated_at',
@@ -74,8 +78,10 @@ class User extends DynamicQuery
     ];
 
     protected $casts = [
-        'number_authenticated' => 'boolean',
+        'email_two_factor_auth' => 'boolean',
         'email_authenticated' => 'boolean',
+        'number_two_factor_auth' => 'boolean',
+        'number_authenticated' => 'boolean',
         'active' => 'boolean',
     ];
 

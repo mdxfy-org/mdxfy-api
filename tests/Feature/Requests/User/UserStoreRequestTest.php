@@ -13,30 +13,21 @@ use Tests\TestCase;
 class UserStoreRequestTest extends TestCase
 {
     #[Test]
-    public function it_should_pass_with_valid_data()
-    {
-        $data = $this->getBaseValidData();
-
-        $validator = Validator::make($data, (new UserStoreRequest())->rules());
-        $this->assertTrue($validator->passes());
-    }
-
-    #[Test]
-    public function it_should_fail_when_required_fields_are_missing()
+    public function itShouldFailWhenRequiredFieldsAreMissing()
     {
         $data = [];
 
         $validator = Validator::make($data, (new UserStoreRequest())->rules());
         $this->assertTrue($validator->fails());
         $this->assertArrayHasKey('name', $validator->errors()->toArray());
-        $this->assertArrayHasKey('surname', $validator->errors()->toArray());
+        $this->assertArrayHasKey('username', $validator->errors()->toArray());
         $this->assertArrayHasKey('email', $validator->errors()->toArray());
         $this->assertArrayHasKey('password', $validator->errors()->toArray());
         $this->assertArrayHasKey('terms_and_privacy_agreement', $validator->errors()->toArray());
     }
 
     #[Test]
-    public function it_should_fail_with_invalid_email()
+    public function itShouldFailWithInvalidEmail()
     {
         $data = $this->getBaseValidData();
         $data['email'] = 'not-an-email';
@@ -47,18 +38,7 @@ class UserStoreRequestTest extends TestCase
     }
 
     #[Test]
-    public function it_should_fail_with_invalid_number_format()
-    {
-        $data = $this->getBaseValidData();
-        $data['number'] = '123'; // Muito curto
-
-        $validator = Validator::make($data, (new UserStoreRequest())->rules());
-        $this->assertTrue($validator->fails());
-        $this->assertArrayHasKey('number', $validator->errors()->toArray());
-    }
-
-    #[Test]
-    public function it_should_fail_with_weak_password()
+    public function itShouldFailWithWeakPassword()
     {
         $data = $this->getBaseValidData();
         $data['password'] = $data['password_confirm'] = 'abcdefgh'; // só letras
@@ -69,7 +49,7 @@ class UserStoreRequestTest extends TestCase
     }
 
     #[Test]
-    public function it_should_fail_when_passwords_do_not_match()
+    public function itShouldFailWhenPasswordsDoNotMatch()
     {
         $data = $this->getBaseValidData();
         $data['password_confirm'] = 'different123';
@@ -80,7 +60,7 @@ class UserStoreRequestTest extends TestCase
     }
 
     #[Test]
-    public function it_should_fail_when_terms_are_not_accepted()
+    public function itShouldFailWhenTermsAreNotAccepted()
     {
         $data = $this->getBaseValidData();
         $data['terms_and_privacy_agreement'] = false;

@@ -13,11 +13,11 @@ return new class extends Migration {
         Schema::create('post.post', function (Blueprint $table) {
             $table->id();
             $table->uuid()->unique();
+            $table->foreignId('user_id')->constrained('hr.user')->onDelete('cascade');
             $table->text('content');
             $table->enum('visibility', ['public', 'private', 'friends'])->default('public');
-            $table->foreignId('answer_to')->nullable()->constrained('chat.message')->onDelete('cascade');
+            $table->foreignId('answer_to')->nullable()->constrained('post.post')->onDelete('cascade');
             $table->enum('status', ['published', 'draft'])->default('draft');
-            $table->string('user_id');
         });
     }
 
