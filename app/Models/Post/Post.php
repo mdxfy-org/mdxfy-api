@@ -16,9 +16,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int         $id
  * @property string      $uuid
  * @property string      $content
+ * @property string      $as
  * @property string      $visibility
  * @property int         $answer_to
- * @property string      $status
  * @property string      $user_id
  * @property Carbon      $created_at
  * @property Carbon      $updated_at
@@ -34,9 +34,9 @@ class Post extends DynamicQuery
     protected $fillable = [
         'uuid',
         'content',
+        'as',
         'visibility',
         'answer_to',
-        'status',
         'user_id',
     ];
 

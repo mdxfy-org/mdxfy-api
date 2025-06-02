@@ -7,6 +7,7 @@ use App\Http\Controllers\IndexController;
 use App\Http\Controllers\MachineryController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\OfferController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +65,14 @@ Route::middleware(['db.safe', 'fingerprint'])->group(function () {
         Route::post('/login', [UserController::class, 'login']);
         Route::get('/resend-code', [UserController::class, 'resendCode'])->middleware(['auth.basic']);
     });
+
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/post', [PostController::class, 'index']);
+        Route::get('/post/{uuid}', [PostController::class, 'show']);
+        Route::get('/post/user/{username}', [PostController::class, 'userPosts']);
+        Route::post('/post', [PostController::class, 'store']);
+    });
+
     Route::middleware(['auth'])->group(function () {
         // Chat routes
         Route::get('/chat', [ChatController::class, 'getUserchat']);
