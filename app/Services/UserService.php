@@ -32,6 +32,7 @@ class UserService
             return new Error('validation_failed', $validated);
         }
 
+        $data['username'] = explode('@', $data['email'])[0].Str::random(4);
         $data['password'] = Hash::make($data['password']);
         $data['uuid'] = Str::uuid()->toString();
         $user = User::create($data);

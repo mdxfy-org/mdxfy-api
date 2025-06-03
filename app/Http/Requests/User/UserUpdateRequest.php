@@ -20,7 +20,7 @@ class UserUpdateRequest extends FormRequest
                 'string',
                 'unique:pgsql.hr.user',
                 'max:255',
-                'regex:/^[a-zA-Z0-9_]+$/',
+                'regex:/^[a-zA-Z0-9_.-]+$/',
             ],
             'language' => 'nuable|string|max:10',
         ];
