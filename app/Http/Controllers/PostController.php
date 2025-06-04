@@ -15,7 +15,7 @@ class PostController extends Controller
     {
         $offset = request()->query('offset', 0);
 
-        $posts = Post::with("user")->skip($offset)->take(40)->get();
+        $posts = Post::with('user')->skip($offset)->take(40)->orderByDesc('created_at')->get();
 
         if ($posts->isEmpty()) {
             return ResponseFactory::error('no_posts_found', null, null, 404);
@@ -44,13 +44,15 @@ class PostController extends Controller
             return ResponseFactory::error('user_not_found', null, null, 404);
         }
 
-        $posts = Post::where('user_id', $user->id)->get();
+        $offset = request()->query('offset', 0);
+
+        $posts = Post::where('user_id', $user->id)->skip($offset)->take(40)->orderByDesc('created_at')->get();
 
         if ($posts->isEmpty()) {
             return ResponseFactory::error('no_posts_found', null, null, 404);
         }
 
-        return ResponseFactory::success('posts_found', ["user" => UserDataResponse::format($user), "posts" => $posts]);
+        return ResponseFactory::success('posts_found', ['user' => UserDataResponse::format($user), 'posts' => $posts]);
     }
 
     public function store(Request $request)
@@ -70,8 +72,5 @@ class PostController extends Controller
         return ResponseFactory::success('post_created_successfully', $result, 201);
     }
 
-    public function update(Request $request)
-    {
-
-    }
+    public function update(Request $request) {}
 }
