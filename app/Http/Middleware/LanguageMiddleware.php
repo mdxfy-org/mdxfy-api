@@ -11,9 +11,10 @@ class LanguageMiddleware
 {
     public function handle(Request $request, \Closure $next)
     {
-        if (User::auth()) {
+        $user = User::auth();
+        if ($user instanceof User) {
             try {
-                $candidate = Locale::format(User::auth()->language);
+                $candidate = Locale::format($user->language);
             } catch (\Exception $e) {
                 $candidate = Locale::format(config('app.fallback_locale', 'en'));
             }

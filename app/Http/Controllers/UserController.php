@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Factories\ResponseFactory;
+use App\Http\Requests\User\UserLoginRequest;
 use App\Http\Requests\User\UserStoreRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use App\Http\Responses\User\UserDataResponse;
@@ -77,7 +78,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function login(Request $request)
+    public function login(UserLoginRequest $request)
     {
         $credentials = $request->only(['email', 'password', 'remember']);
 
@@ -135,6 +136,7 @@ class UserController extends Controller
 
         return ResponseFactory::success('user_found', [
             'user' => UserDataResponse::format($user),
+            'first_login' => !$user->email_verified,
             'authenticated' => $session->authenticated,
         ]);
     }

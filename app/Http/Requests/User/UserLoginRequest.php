@@ -23,4 +23,11 @@ class UserLoginRequest extends FormRequest
             ],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'email.exists' => __('passwords.user'),
+        ];
+    }
 }
