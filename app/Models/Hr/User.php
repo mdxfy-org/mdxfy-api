@@ -96,6 +96,15 @@ class User extends DynamicQuery
     protected $hidden = [
         'password',
         'remember_token',
+        'email_two_factor_auth',
+        'email_verified',
+        'email_verified_at',
+        'number_two_factor_auth',
+        'number_verified',
+        'number_verified_at',
+        'active',
+        'updated_at',
+        'inactivated_at',
     ];
 
     public static function getDecodedToken(): \stdClass|UserError

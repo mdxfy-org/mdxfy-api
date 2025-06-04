@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Factories\ResponseFactory;
+use App\Http\Requests\Post\PostStoreRequest;
+use App\Http\Requests\Post\PostUpdateRequest;
 use App\Http\Responses\User\UserDataResponse;
 use App\Models\Hr\User;
 use App\Models\Post\Post;
@@ -13,9 +15,16 @@ class PostController extends Controller
 {
     public function index()
     {
+        // $last_idx = request()->query('last_idx', 0);
         $offset = request()->query('offset', 0);
 
-        $posts = Post::with('user')->skip($offset)->take(40)->orderByDesc('created_at')->get();
+        $posts = Post::with('user')
+            ->where('visibility', 'public')
+            ->where('as', 'post')
+            ->skip($offset)
+            ->take(40)
+            ->orderByDesc('created_at')
+            ->get();
 
         if ($posts->isEmpty()) {
             return ResponseFactory::error('no_posts_found', null, null, 404);
@@ -26,11 +35,10 @@ class PostController extends Controller
 
     public function show($uuid)
     {
-        $post = Post::where('uuid', $uuid)->first();
-        $user = $post->user()->first();
+        $post = Post::with('user')->where('uuid', $uuid)->first();
 
         if ($post) {
-            return ResponseFactory::success('post_found', ['post' => $post, 'user' => UserDataResponse::format($user)]);
+            return ResponseFactory::success('post_found', ['post' => $post]);
         }
 
         return ResponseFactory::error('post_not_found', null, null, 404);
@@ -55,14 +63,10 @@ class PostController extends Controller
         return ResponseFactory::success('posts_found', ['user' => UserDataResponse::format($user), 'posts' => $posts]);
     }
 
-    public function store(Request $request)
+    public function store(PostStoreRequest $request)
     {
         $user = User::auth();
-        $data = $request->validate([
-            'as' => 'required|in:post,draft',
-            'content' => 'required|string|max:5000',
-            'visibility' => 'required|in:public,private,friends',
-        ]);
+        $data = $request->validated();
 
         $result = Post::create($data + [
             'uuid' => Str::uuid()->toString(),
@@ -72,5 +76,8 @@ class PostController extends Controller
         return ResponseFactory::success('post_created_successfully', $result, 201);
     }
 
-    public function update(Request $request) {}
+    public function update(PostUpdateRequest $request)
+    {
+
+    }
 }

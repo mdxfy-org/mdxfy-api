@@ -49,6 +49,21 @@ class Post extends DynamicQuery
         'updated_at',
     ];
 
+    protected $hidden = [
+        'id',
+        'password',
+        'remember_token',
+        'email_two_factor_auth',
+        'email_verified',
+        'email_verified_at',
+        'number_two_factor_auth',
+        'number_verified',
+        'number_verified_at',
+        'active',
+        'updated_at',
+        'inactivated_at',
+    ];
+
     /**
      * Defines the relationship to the User model.
      *
