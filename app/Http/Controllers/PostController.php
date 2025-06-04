@@ -15,7 +15,7 @@ class PostController extends Controller
 {
     public function index()
     {
-        // $last_idx = request()->query('last_idx', 0);
+
         $offset = request()->query('offset', 0);
 
         $posts = Post::with('user')
@@ -29,6 +29,35 @@ class PostController extends Controller
         if ($posts->isEmpty()) {
             return ResponseFactory::error('no_posts_found', null, null, 404);
         }
+
+        $posts->transform(function ($post) {
+            $raw = $post->content;
+            $lines = preg_split('/\r\n|\r|\n/', $raw);
+
+            $seeMore = false;
+
+            if (count($lines) > 6) {
+                $slice = array_slice($lines, 0, 6);
+                $excerpt = implode("\n", $slice) . '...';
+                $seeMore = true;
+            } elseif (count($lines) === 1) {
+                if (Str::length($raw) > 200) {
+                    $excerpt = Str::limit($raw, 200, '...');
+                    $seeMore = true;
+                } else {
+                    $excerpt = $raw;
+                }
+            } else {
+                $joined = implode("\n", $lines);
+                $excerpt = $joined;
+            }
+
+            $post->content = '';
+            $post->excerpt = $excerpt;
+            $post->see_more = $seeMore;
+
+            return $post;
+        });
 
         return ResponseFactory::success('posts_found', $posts);
     }
