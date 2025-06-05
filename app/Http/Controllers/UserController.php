@@ -64,7 +64,7 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request)
     {
-        $data = $request->only(['name', 'email']);
+        $data = $request->validated();
         $user = User::auth();
 
         if (!$user) {
@@ -80,7 +80,7 @@ class UserController extends Controller
 
     public function login(UserLoginRequest $request)
     {
-        $credentials = $request->only(['email', 'password', 'remember']);
+        $credentials = $request->validated();
 
         $result = $this->authService->login($credentials, $request);
 

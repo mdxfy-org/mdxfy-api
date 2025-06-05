@@ -15,7 +15,7 @@ class PostUpdateRequest extends FormRequest
     {
         return [
             'as' => 'required|in:post,draft',
-            'content' => 'required|string|min:20|max:100000',
+            'content' => 'required|string|min:20|max:10000',
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'visibility' => 'required|in:public,private,friends',

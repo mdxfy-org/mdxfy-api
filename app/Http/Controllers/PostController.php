@@ -98,6 +98,17 @@ class PostController extends Controller
     public function store(PostStoreRequest $request)
     {
         $user = User::auth();
+
+        $lastPost = Post::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->first();
+
+        if ($lastPost && $lastPost->created_at->diffInSeconds(now()) < 60 * 3) {
+            return ResponseFactory::error('cannot_post_so_quickly', null, [
+                "content" => __('post.cannot_post_so_quickly'),
+            ], 429);
+        }
+
         $data = $request->validated();
 
         $result = Post::create($data + [
