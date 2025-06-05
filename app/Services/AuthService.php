@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\UserAction;
 use App\Factories\SessionFactory;
 use App\Factories\TokenFactory;
+use App\Http\Requests\User\UserLoginRequest;
 use App\Http\Responses\User\UserDataResponse;
 use App\Models\Error;
 use App\Models\Hr\AuthCode;
@@ -21,12 +22,12 @@ class AuthService
     /**
      * Logs in the user.
      *
-     * @param array   $credentials Authentication data (email, password, remember)
-     * @param Request $request     Request instance
+     * @param array            $credentials Authentication data (email, password, remember)
+     * @param UserLoginRequest $request     Request instance
      *
      * @return Error|Success Result containing user, token, session, or error
      */
-    public function login(array $credentials, Request $request): Error|Success
+    public function login(array $credentials, UserLoginRequest $request): Error|Success
     {
         $user = User::where('email', $credentials['email'])->first();
         if (!$user) {

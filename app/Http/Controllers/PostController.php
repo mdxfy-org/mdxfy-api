@@ -5,17 +5,14 @@ namespace App\Http\Controllers;
 use App\Factories\ResponseFactory;
 use App\Http\Requests\Post\PostStoreRequest;
 use App\Http\Requests\Post\PostUpdateRequest;
-use App\Http\Responses\User\UserDataResponse;
 use App\Models\Hr\User;
 use App\Models\Post\Post;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
     public function index()
     {
-
         $offset = request()->query('offset', 0);
 
         $posts = Post::with('user')
@@ -24,10 +21,11 @@ class PostController extends Controller
             ->skip($offset)
             ->take(40)
             ->orderByDesc('created_at')
-            ->get();
+            ->get()
+        ;
 
         if ($posts->isEmpty()) {
-            return ResponseFactory::error('no_posts_found', null, null, 404);
+            return ResponseFactory::success('no_posts_found', []);
         }
 
         $posts->transform(function ($post) {
@@ -38,7 +36,7 @@ class PostController extends Controller
 
             if (count($lines) > 6) {
                 $slice = array_slice($lines, 0, 6);
-                $excerpt = implode("\n", $slice) . '...';
+                $excerpt = implode("\n", $slice).'...';
                 $seeMore = true;
             } elseif (count($lines) === 1) {
                 if (Str::length($raw) > 200) {
@@ -83,13 +81,19 @@ class PostController extends Controller
 
         $offset = request()->query('offset', 0);
 
-        $posts = Post::where('user_id', $user->id)->skip($offset)->take(40)->orderByDesc('created_at')->get();
+        $posts = Post::with('user')
+            ->where('user_id', $user->id)
+            ->skip($offset)
+            ->take(40)
+            ->orderByDesc('created_at')
+            ->get()
+        ;
 
         if ($posts->isEmpty()) {
-            return ResponseFactory::error('no_posts_found', null, null, 404);
+            return ResponseFactory::success('no_posts_found', []);
         }
 
-        return ResponseFactory::success('posts_found', ['user' => UserDataResponse::format($user), 'posts' => $posts]);
+        return ResponseFactory::success('posts_found', $posts);
     }
 
     public function store(PostStoreRequest $request)
@@ -105,8 +109,5 @@ class PostController extends Controller
         return ResponseFactory::success('post_created_successfully', $result, 201);
     }
 
-    public function update(PostUpdateRequest $request)
-    {
-
-    }
+    public function update(PostUpdateRequest $request) {}
 }

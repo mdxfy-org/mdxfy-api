@@ -22,7 +22,7 @@ class UserUpdateRequest extends FormRequest
                 'max:255',
                 'regex:/^[a-zA-Z0-9_.-]+$/',
             ],
-            'language' => 'nuable|string|max:10',
+            'language' => 'nullable|string|max:10',
         ];
     }
 }

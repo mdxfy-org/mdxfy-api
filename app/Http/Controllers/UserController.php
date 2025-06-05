@@ -152,6 +152,17 @@ class UserController extends Controller
         return ResponseFactory::success('user_found', $user);
     }
 
+    public function username($username)
+    {
+        $user = $this->userQueryService->getInfoByUsername($username);
+
+        if (!$user) {
+            return ResponseFactory::error('user_not_found', null, null, 404);
+        }
+
+        return ResponseFactory::success('user_found', $user);
+    }
+
     public function picture($userUuid, $pictureUuid = null)
     {
         $result = $this->pictureService->getPicture($userUuid, $pictureUuid);

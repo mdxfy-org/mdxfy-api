@@ -39,6 +39,16 @@ class UserQueryService
     }
 
     /**
+     * Returns summarized user information.
+     *
+     * @return null|User
+     */
+    public function getInfoByUsername(string $username)
+    {
+        return User::where(['username' => $username])->first();
+    }
+
+    /**
      * Checks if a user exists by number.
      *
      * @return null|User

@@ -26,7 +26,7 @@ class UserStoreRequest extends FormRequest
             'password_confirm' => 'required|same:password',
             'terms_and_privacy_agreement' => 'required|accepted',
             'remember' => 'nullable|string',
-            'language' => 'nuable|string|max:10',
+            'language' => 'nullable|string|max:10',
         ];
     }
 }

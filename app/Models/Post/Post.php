@@ -4,24 +4,24 @@ namespace App\Models\Post;
 
 use App\Models\DynamicQuery;
 use App\Models\Hr\User;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Class Post.
  *
  * Represents a post in the system.
  *
- * @property int         $id
- * @property string      $uuid
- * @property string      $content
- * @property string      $as
- * @property string      $visibility
- * @property int         $answer_to
- * @property string      $user_id
- * @property Carbon      $created_at
- * @property Carbon      $updated_at
+ * @property int    $id
+ * @property string $uuid
+ * @property string $content
+ * @property string $as
+ * @property string $visibility
+ * @property int    $answer_to
+ * @property string $user_id
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 class Post extends DynamicQuery
 {
@@ -41,7 +41,7 @@ class Post extends DynamicQuery
     ];
 
     protected $casts = [
-        'id' => 'integer'
+        'id' => 'integer',
     ];
 
     protected $dates = [
@@ -60,14 +60,11 @@ class Post extends DynamicQuery
         'number_verified',
         'number_verified_at',
         'active',
-        'updated_at',
         'inactivated_at',
     ];
 
     /**
      * Defines the relationship to the User model.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {

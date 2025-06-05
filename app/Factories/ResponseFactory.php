@@ -46,12 +46,10 @@ class ResponseFactory
         if (!empty($message)) {
             $response['message'] = $message;
         }
-        if (!empty($payload)) {
-            if ($payload instanceof Success) {
-                $response['data'] = $payload->data;
-            } else {
-                $response['data'] = $payload;
-            }
+        if ($payload instanceof Success) {
+            $response['data'] = $payload->data;
+        } else {
+            $response['data'] = $payload;
         }
 
         return response()->json($response, $code);

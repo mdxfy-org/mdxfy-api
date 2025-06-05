@@ -1,14 +1,10 @@
 <?php
 
-use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\IndexController;
-use App\Http\Controllers\MachineryController;
 use App\Http\Controllers\MessageController;
-use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PostController;
-use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +45,7 @@ Route::middleware(['db.safe', 'fingerprint'])->group(function () {
         Route::prefix('/info')->middleware(['auth.basic'])->group(function () {
             Route::get('/me', [UserController::class, 'self']);
             Route::get('/{uuid}', [UserController::class, 'info']);
+            Route::get('/username/{username}', [UserController::class, 'username']);
         });
         Route::middleware(['auth'])->post('/profile-type', [UserController::class, 'setProfileType']);
         Route::prefix('/picture')->middleware(['auth'])->group(function () {
