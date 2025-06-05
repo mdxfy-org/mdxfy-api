@@ -63,11 +63,13 @@ Route::middleware(['db.safe', 'fingerprint'])->group(function () {
         Route::get('/resend-code', [UserController::class, 'resendCode'])->middleware(['auth.basic']);
     });
 
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/post', [PostController::class, 'index']);
-        Route::get('/post/{uuid}', [PostController::class, 'show']);
-        Route::get('/post/user/{username}', [PostController::class, 'userPosts']);
-        Route::post('/post', [PostController::class, 'store']);
+    Route::middleware(['auth'])->prefix('/post')->group(function () {
+        Route::get('/', [PostController::class, 'index']);
+        Route::get('/{uuid}', [PostController::class, 'show']);
+        Route::get('/user/{username}', [PostController::class, 'userPosts']);
+        Route::post('/', [PostController::class, 'store']);
+        Route::put('/{uuid}', [PostController::class, 'update']);
+        Route::delete('/{uuid}', [PostController::class, 'delete']);
     });
 
     Route::middleware(['auth'])->group(function () {

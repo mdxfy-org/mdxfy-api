@@ -35,12 +35,12 @@ class PostController extends Controller
             $seeMore = false;
 
             if (count($lines) > 6) {
-                $slice = array_slice($lines, 0, 6);
-                $excerpt = implode("\n", $slice).'...';
+                $slice = array_slice($lines, 0, 8);
+                $excerpt = implode("\n", $slice) . '...';
                 $seeMore = true;
             } elseif (count($lines) === 1) {
                 if (Str::length($raw) > 200) {
-                    $excerpt = Str::limit($raw, 200, '...');
+                    $excerpt = Str::limit($raw, 250, '...');
                     $seeMore = true;
                 } else {
                     $excerpt = $raw;
@@ -108,5 +108,38 @@ class PostController extends Controller
         return ResponseFactory::success('post_created_successfully', $result, 201);
     }
 
-    public function update(PostUpdateRequest $request) {}
+    public function update(PostUpdateRequest $request)
+    {
+        $post = Post::where('uuid', $request->uuid)->first();
+
+        if (!$post) {
+            return ResponseFactory::error('post_not_found', null, null, 404);
+        }
+
+        if ($post->user_id !== User::auth()->id) {
+            return ResponseFactory::error('unauthorized_action', null, null, 403);
+        }
+
+        $data = $request->validated();
+        $post->update($data);
+
+        return ResponseFactory::success('post_updated_successfully', $post);
+    }
+
+    public function delete($uuid)
+    {
+        $post = Post::where('uuid', $uuid)->first();
+
+        if (!$post) {
+            return ResponseFactory::error('post_not_found', null, null, 404);
+        }
+
+        if ($post->user_id !== User::auth()->id) {
+            return ResponseFactory::error('unauthorized_action', null, null, 403);
+        }
+
+        $post->delete();
+
+        return ResponseFactory::success('post_deleted_successfully', null, 204);
+    }
 }
