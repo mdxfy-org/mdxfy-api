@@ -62,18 +62,24 @@ class PostController extends Controller
     public function show($uuid)
     {
         $user = User::auth();
+        // $post = Post::with('user')
+        //     ->where('uuid', $uuid)
+        //     ->where('as', 'post')
+        //     ->where('visibility', 'public')
+        //     ->where('active', true)
+        //     ->first()
+        // ;
+
         $post = Post::with('user')
             ->where('uuid', $uuid)
-            ->where('as', 'post')
-            ->where('visibility', 'public')
-            ->where('active', true)
+            // ->where('active', true)
             ->first()
         ;
 
         if ($post) {
-            if (($post->as === 'post' || $post->visibility !== 'public') && $post->user_id !== $user->id) {
-                return ResponseFactory::error('post_not_found', null, null, 404);
-            }
+            // if (($post->as === 'post' || $post->visibility !== 'public') && $post->user_id !== $user->id) {
+            //     return ResponseFactory::error('post_not_found', null, null, 404);
+            // }
 
             return ResponseFactory::success('post_found', ['post' => $post]);
         }
