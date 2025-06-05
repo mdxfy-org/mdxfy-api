@@ -50,8 +50,7 @@ class PostController extends Controller
                 $excerpt = $joined;
             }
 
-            $post->content = '';
-            $post->excerpt = $excerpt;
+            $post->content = $excerpt;
             $post->see_more = $seeMore;
 
             return $post;
