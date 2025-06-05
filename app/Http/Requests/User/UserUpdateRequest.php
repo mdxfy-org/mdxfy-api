@@ -25,4 +25,13 @@ class UserUpdateRequest extends FormRequest
             'language' => 'nullable|string|max:10',
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('username')) {
+            $this->merge([
+                'username' => strtolower($this->input('username')),
+            ]);
+        }
+    }
 }

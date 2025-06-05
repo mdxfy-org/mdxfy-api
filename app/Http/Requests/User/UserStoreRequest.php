@@ -21,12 +21,31 @@ class UserStoreRequest extends FormRequest
                 'required',
                 'string',
                 'min:8',
-                'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/',
+                'regex:/[A-Za-z]/',
+                'regex:/[0-9]/',
             ],
             'password_confirm' => 'required|same:password',
             'terms_and_privacy_agreement' => 'required|accepted',
             'remember' => 'nullable|string',
             'language' => 'nullable|string|max:10',
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email')) {
+            $this->merge([
+                'email' => strtolower($this->input('email')),
+            ]);
+        }
+    }
+
+    public function messages(): array
+    {
+        return [
+            'password.min' => __('passwords.min'),
+            'password.regex.0' => __('passwords.regex.0'),
+            'password.regex.1' => __('passwords.regex.1'),
         ];
     }
 }

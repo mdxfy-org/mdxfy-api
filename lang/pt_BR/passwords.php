@@ -20,4 +20,9 @@ return [
     'token' => 'Este token de redefinição de senha é inválido.',
     'user' => 'Usuário não encontrado.',
 
+    'min' => "A senha deve possuir pelo menos 8 caracteres.",
+    'regex' => [
+        '0' => "A senha deve conter pelo menos uma letra.",
+        '1' => "A senha deve conter pelo menos um número.",
+    ],
 ];
