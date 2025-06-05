@@ -36,7 +36,7 @@ class PostController extends Controller
 
             if (count($lines) > 6) {
                 $slice = array_slice($lines, 0, 8);
-                $excerpt = implode("\n", $slice) . '...';
+                $excerpt = implode("\n", $slice).'...';
                 $seeMore = true;
             } elseif (count($lines) === 1) {
                 if (Str::length($raw) > 200) {
@@ -101,11 +101,12 @@ class PostController extends Controller
 
         $lastPost = Post::where('user_id', $user->id)
             ->orderByDesc('created_at')
-            ->first();
+            ->first()
+        ;
 
         if ($lastPost && $lastPost->created_at->diffInSeconds(now()) < 60 * 3) {
             return ResponseFactory::error('cannot_post_so_quickly', null, [
-                "content" => __('post.cannot_post_so_quickly'),
+                'content' => __('post.cannot_post_so_quickly'),
             ], 429);
         }
 
@@ -149,7 +150,10 @@ class PostController extends Controller
             return ResponseFactory::error('unauthorized_action', null, null, 403);
         }
 
-        $post->delete();
+        $post->update([
+            'active' => false,
+            'inactivated_at' => now(),
+        ]);
 
         return ResponseFactory::success('post_deleted_successfully', null, 204);
     }

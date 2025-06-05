@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $user_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property Carbon $inactivated_at
  */
 class Post extends DynamicQuery
 {
