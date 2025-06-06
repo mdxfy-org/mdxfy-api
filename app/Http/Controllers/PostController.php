@@ -99,6 +99,8 @@ class PostController extends Controller
 
         $posts = Post::with('user')
             ->where('user_id', $user->id)
+            ->where('visibility', 'public')
+            ->where('as', 'post')
             ->skip($offset)
             ->take(40)
             ->orderByDesc('created_at')

@@ -51,7 +51,7 @@ class AuthService
         ;
 
         $authType = AuthCode::EMAIL;
-        $authCode = ($user->email_verified && $remember) ? null : AuthCode::createCode($user->id, $authType);
+        $authCode = ($user->email_verified && ($user->email_two_factor_auth || $remember)) ? null : AuthCode::createCode($user->id, $authType);
 
         $session = SessionFactory::create($user, $request, $browserAgent, $authCode);
 
