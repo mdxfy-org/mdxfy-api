@@ -118,10 +118,14 @@ class User extends DynamicQuery
             return UserError::MISSING_TOKEN;
         }
 
-        $decoded = JWT::decode($token, new Key(env('APP_KEY'), 'HS256'));
-        self::$decodedToken = $decoded;
+        try {
+            $decoded = JWT::decode($token, new Key(env('APP_KEY'), 'HS256'));
+            self::$decodedToken = $decoded;
 
-        return $decoded;
+            return $decoded;
+        } catch (\Throwable) {
+            return UserError::INVALID_TOKEN;
+        }
     }
 
     /**
@@ -133,26 +137,22 @@ class User extends DynamicQuery
             return self::$user;
         }
 
-        try {
-            $decoded = self::getDecodedToken();
+        $decoded = self::getDecodedToken();
 
-            if (gettype($decoded) === 'enum') {
-                return $decoded;
-            }
+        if ($decoded instanceof UserError) {
+            return $decoded;
+        }
 
-            if (!isset($decoded->sub)) {
-                return UserError::INVALID_TOKEN;
-            }
-            $user = self::where('id', $decoded->sub)->first();
-            if (!$user) {
-                return UserError::USER_NOT_FOUND;
-            }
-            self::$user = $user;
-
-            return $user;
-        } catch (\Throwable) {
+        if (!isset($decoded->sub)) {
             return UserError::INVALID_TOKEN;
         }
+        $user = self::where('id', $decoded->sub)->first();
+        if (!$user) {
+            return UserError::USER_NOT_FOUND;
+        }
+        self::$user = $user;
+
+        return $user;
     }
 
     public static function session(): Session|UserError
@@ -162,7 +162,7 @@ class User extends DynamicQuery
         }
         $decoded = self::getDecodedToken();
 
-        if (gettype($decoded) === 'enum') {
+        if ($decoded instanceof UserError) {
             return $decoded;
         }
 

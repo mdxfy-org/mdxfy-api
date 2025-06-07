@@ -7,18 +7,19 @@ use App\Http\Requests\Post\PostStoreRequest;
 use App\Http\Requests\Post\PostUpdateRequest;
 use App\Models\Hr\User;
 use App\Models\Post\Post;
+use App\Services\PostService;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
+    public function __construct(
+        private PostService $postService
+    ) {}
+
     public function index()
     {
-        $offset = request()->query('offset', 0);
-
-        $posts = Post::with('user')
-            ->where('visibility', 'public')
-            ->where('as', 'post')
-            ->skip($offset)
+        $posts = $this->postService->queryPublicPosts()
+            ->skip(request('offset', 0))
             ->take(40)
             ->orderByDesc('created_at')
             ->get()
@@ -28,66 +29,30 @@ class PostController extends Controller
             return ResponseFactory::success('no_posts_found', []);
         }
 
-        $posts->transform(function ($post) {
-            $raw = $post->content;
-            $lines = preg_split('/\r\n|\r|\n/', $raw);
-
-            $seeMore = false;
-
-            if (count($lines) > 6) {
-                $slice = array_slice($lines, 0, 8);
-                $excerpt = implode("\n", $slice).'...';
-                $seeMore = true;
-            } elseif (count($lines) === 1) {
-                if (Str::length($raw) > 200) {
-                    $excerpt = Str::limit($raw, 250, '...');
-                    $seeMore = true;
-                } else {
-                    $excerpt = $raw;
-                }
-            } else {
-                $joined = implode("\n", $lines);
-                $excerpt = $joined;
-            }
-
-            $post->content = $excerpt;
-            $post->see_more = $seeMore;
-
-            return $post;
-        });
+        $posts = $this->postService->transformWithExcerpt($posts);
 
         return ResponseFactory::success('posts_found', $posts);
     }
 
-    public function show($uuid)
+    public function show(string $uuid)
     {
-        $user = User::auth();
-        // $post = Post::with('user')
-        //     ->where('uuid', $uuid)
-        //     ->where('as', 'post')
-        //     ->where('visibility', 'public')
-        //     ->where('active', true)
-        //     ->first()
-        // ;
-
-        $post = Post::with('user')
+        $post = $this->postService->queryPublicPosts()
             ->where('uuid', $uuid)
-            // ->where('active', true)
             ->first()
         ;
 
-        if ($post) {
-            // if (($post->as === 'post' || $post->visibility !== 'public') && $post->user_id !== $user->id) {
-            //     return ResponseFactory::error('post_not_found', null, null, 404);
-            // }
-
-            return ResponseFactory::success('post_found', ['post' => $post]);
+        if (!$post) {
+            return ResponseFactory::error('post_not_found', null, null, 404);
         }
 
-        return ResponseFactory::error('post_not_found', null, null, 404);
+        if ($post->visibility !== 'public' && $post->user_id !== User::auth()->id) {
+            return ResponseFactory::error('unauthorized_action', null, null, 403);
+        }
+
+        return ResponseFactory::success('post_found', $post);
     }
 
-    public function userPosts($username)
+    public function userPosts(string $username)
     {
         $user = User::where('username', $username)->first();
 
@@ -95,13 +60,9 @@ class PostController extends Controller
             return ResponseFactory::error('user_not_found', null, null, 404);
         }
 
-        $offset = request()->query('offset', 0);
-
-        $posts = Post::with('user')
+        $posts = $this->postService->queryPublicPosts()
             ->where('user_id', $user->id)
-            ->where('visibility', 'public')
-            ->where('as', 'post')
-            ->skip($offset)
+            ->skip(request('offset', 0))
             ->take(40)
             ->orderByDesc('created_at')
             ->get()

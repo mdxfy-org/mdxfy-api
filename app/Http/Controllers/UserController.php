@@ -67,6 +67,11 @@ class UserController extends Controller
         $data = $request->validated();
         $user = User::auth();
 
+        $username = User::where('username', $data['username'])->first();
+        if ($username && $username->uuid !== $user->uuid) {
+            return ResponseFactory::error('username_already_taken', null, null, 409);
+        }
+
         if (!$user) {
             return ResponseFactory::error('user_not_found', null, null, 404);
         }

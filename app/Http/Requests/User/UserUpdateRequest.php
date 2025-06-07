@@ -18,7 +18,6 @@ class UserUpdateRequest extends FormRequest
             'username' => [
                 'required',
                 'string',
-                'unique:pgsql.hr.user',
                 'max:255',
                 'regex:/^[a-zA-Z0-9_.-]+$/',
             ],

@@ -14,32 +14,29 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Represents a post in the system.
  *
  * @property int    $id
- * @property string $uuid
  * @property string $content
- * @property string $as
- * @property string $visibility
- * @property int    $answer_to
  * @property int    $user_id
+ * @property int    $post_id
+ * @property bool   $active
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $inactivated_at
  */
-class Post extends DynamicQuery
+class PostReaction extends DynamicQuery
 {
     use HasFactory;
 
-    protected $table = 'post.post';
+    protected $table = 'post.post_reaction';
 
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        'uuid',
-        'content',
-        'as',
-        'visibility',
-        'answer_to',
         'user_id',
+        'post_id',
+        'content',
         'active',
+        'created_at',
+        'updated_at',
         'inactivated_at',
     ];
 
@@ -64,23 +61,8 @@ class Post extends DynamicQuery
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function answers()
+    public function reactTo()
     {
-        return $this->hasMany(Post::class, 'answer_to', 'id');
-    }
-
-    public function countAnswers()
-    {
-        return $this->answers()->count();
-    }
-
-    public function answersTo()
-    {
-        return $this->belongsTo(Post::class, 'answer_to', 'id');
-    }
-
-    public function reactions()
-    {
-        return $this->hasMany(PostReaction::class, 'post_id', 'id');
+        return $this->belongsTo(Post::class, 'post_id', 'id');
     }
 }

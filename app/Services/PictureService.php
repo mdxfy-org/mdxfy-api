@@ -77,7 +77,7 @@ class PictureService
     public function uploadPicture(Request $request, User $user): Error|Success
     {
         $validated = $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $uuid = Str::uuid();
