@@ -18,16 +18,16 @@ class PostService
     {
         $post = Post::with([
             'user',
-            'answersTo',
+            'answersTo' => function ($query) {
+                $query->with(['user'])->withCount([
+                    'answers',
+                ])->where($this->getPostWheres());
+            },
         ])
             ->withCount([
                 'answers',
             ])
-            ->where([
-                ['visibility', '=', 'public'],
-                ['as', '=', 'post'],
-                ['active', '=', true],
-            ])
+            ->where($this->getPostWheres())
         ;
 
         if ($withAnswers) {
@@ -46,15 +46,17 @@ class PostService
      */
     public function withAnswers(Builder $post): Builder
     {
-        return $post->with(['answers' => function ($query) {
-            $query->with(['user', 'answersTo'])->withCount([
-                'answers',
-            ])->where([
-                ['visibility', '=', 'public'],
-                ['as', '=', 'post'],
-                ['active', '=', true],
-            ]);
-        }, ]);
+        return $post->with([
+            'answers' => function ($query) {
+                $query->with(['user', 'answersTo'])->withCount([
+                    'answers',
+                ])->where([
+                    ['visibility', '=', 'public'],
+                    ['as', '=', 'post'],
+                    ['active', '=', true],
+                ]);
+            },
+        ]);
     }
 
     public function transformWithExcerpt(Collection $posts): Collection
@@ -81,5 +83,14 @@ class PostService
         $post->see_more = $seeMore;
 
         return $post;
+    }
+
+    protected function getPostWheres()
+    {
+        return [
+            ['visibility', '=', 'public'],
+            ['as', '=', 'post'],
+            ['active', '=', true],
+        ];
     }
 }
