@@ -9,15 +9,52 @@ use Illuminate\Support\Str;
 
 class PostService
 {
-    public function queryPublicPosts(): Builder
+    /**
+     * Eager load answers for the post query.
+     *
+     * @return Builder<Post>
+     */
+    public function queryPublicPosts(bool $withAnswers = false): Builder
     {
-        return Post::with(['user', 'answersTo'])
+        $post = Post::with([
+            'user',
+            'answersTo',
+        ])
+            ->withCount([
+                'answers',
+            ])
             ->where([
                 ['visibility', '=', 'public'],
                 ['as', '=', 'post'],
                 ['active', '=', true],
             ])
         ;
+
+        if ($withAnswers) {
+            return $this->withAnswers($post);
+        }
+
+        return $post;
+    }
+
+    /**
+     * Eager load answers for the post query.
+     *
+     * @param Builder<Post> $post
+     *
+     * @return Builder<Post>
+     */
+    public function withAnswers(Builder $post): Builder
+    {
+        return $post->with(['answers' => function ($query) {
+            $query->with(['user', 'answersTo'])->withCount([
+                'answers',
+            ])->where([
+                ['visibility', '=', 'public'],
+                ['as', '=', 'post'],
+                ['active', '=', true],
+            ]);
+        }, ]);
     }
 
     public function transformWithExcerpt(Collection $posts): Collection

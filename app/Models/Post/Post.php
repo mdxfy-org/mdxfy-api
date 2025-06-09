@@ -69,11 +69,6 @@ class Post extends DynamicQuery
         return $this->hasMany(Post::class, 'answer_to', 'id');
     }
 
-    public function countAnswers()
-    {
-        return $this->answers()->count();
-    }
-
     public function answersTo()
     {
         return $this->belongsTo(Post::class, 'answer_to', 'id');

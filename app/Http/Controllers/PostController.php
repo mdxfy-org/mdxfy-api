@@ -36,7 +36,7 @@ class PostController extends Controller
 
     public function show(string $uuid)
     {
-        $post = $this->postService->queryPublicPosts()
+        $post = $this->postService->queryPublicPosts(true)
             ->where('uuid', $uuid)
             ->first()
         ;
@@ -92,10 +92,19 @@ class PostController extends Controller
 
         $data = $request->validated();
 
-        $result = Post::create($data + [
-            'uuid' => Str::uuid()->toString(),
-            'user_id' => $user->id,
-        ]);
+        $data['uuid'] = Str::uuid()->toString();
+        $data['user_id'] = $user->id;
+
+        if (!empty($data['answer_to'])) {
+            $answerToPost = Post::where('uuid', $data['answer_to'])->first();
+            if ($answerToPost->visibility !== 'public' && $answerToPost->as !== 'post') {
+                return ResponseFactory::error('unauthorized_action', null, null, 403);
+            }
+
+            $data['answer_to'] = $answerToPost->id;
+        }
+
+        $result = Post::create($data);
 
         return ResponseFactory::success('post_created_successfully', $result, 201);
     }
